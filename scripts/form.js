@@ -9,7 +9,22 @@ const template = `
         </div>
         <hr>
         <div class="form-group">
-            <label for="p_type">Wave type</label>
+            <label for="p_rate">Sampling rate</label>
+            <select value='{{p_rate.value}}' id="p_rate" name="pp_rate">
+              {{#each p_rate.meta.rates}}
+                <option value="{{value}}">{{name}}</option>
+              {{/each}}
+            </select>
+        </div>
+        <hr>
+        <div class="form-group">
+            <label for="p_bits">Sample resolution</label>
+            <input type="range" min="{{p_bits.meta.min}}" max="{{p_bits.meta.max}}" step="{{p_bits.meta.step}}" value="{{p_bits.value}}" name="p_bits" id="p_bits">
+            <span>{{p_bits.value}}&nbsp;bits</span>
+        </div>
+        <hr>
+        <div class="form-group">
+            <label for="p_type">Wave type</label>volume
             <select value='{{p_type.value}}' id="p_type" name="pp_type">
               {{#each p_type.meta.types}}
                 <option value="{{value}}">{{name}}</option>

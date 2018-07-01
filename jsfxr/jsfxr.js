@@ -437,8 +437,22 @@ function SfxrSynth() {
       _superSample *= .125 * _envelopeVolume * _masterVolume;
 
       // Clipping if too loud
-      buffer[i] = _superSample >= 1 ? 32767 : _superSample <= -1 ? -32768 : _superSample * 32767 | 0;
+      if (this.sampleRes === 16) {
+        buffer[i] = _superSample >= 1 ? 32767 : _superSample <= -1 ? -32768 : _superSample * 32767 | 0;
+      } else {
+        buffer[i] = _superSample >= 1 ? 255 : _superSample <= -1 ? 0 : (_superSample*32767+32768)>>8 | 0;
+      }
     }
+
+    // resample
+    buffer.forEach((v, i) => {
+      if (this.sampleRate === 2) {
+        buffer[i] = i*this.sampleRate < buffer.length ? ((buffer[i*2]+buffer[i*2]+1)/2)|0 : 0
+      } else {
+        buffer[i] = i*this.sampleRate < buffer.length ? buffer[i*this.sampleRate] : 0
+      }
+    })
+    console.log(buffer)
 
     return length;
   }
@@ -447,13 +461,17 @@ function SfxrSynth() {
 // Adapted from http://codebase.es/riffwave/
 var synth = new SfxrSynth();
 // Export for the Closure Compiler
-var jsfxr = function(settings) {
+var jsfxr = function(settings, sampleRate, sampleRes) {
+  synth.sampleRate = sampleRate||1
+  synth.sampleRes = sampleRes||16
   // Initialize SfxrParams
   synth._params.setSettings(settings);
   // Synthesize Wave
   var envelopeFullLength = synth.totalReset();
   var data = new Uint8Array(((envelopeFullLength + 1) / 2 | 0) * 4 + 44);
-  var used = synth.synthWave(new Uint16Array(data.buffer, 44), envelopeFullLength) * 2;
+  var used = synth.sampleRes === 16
+    ? ( synth.synthWave(new Uint16Array(data.buffer, 44), envelopeFullLength) * synth.sampleRes>>3 )
+    : ( synth.synthWave(new Uint8ClampedArray(data.buffer, 44), envelopeFullLength) );
   var dv = new Uint32Array(data.buffer, 0, 44);
   // Initialize header
   dv[0] = 0x46464952; // "RIFF"
@@ -462,9 +480,9 @@ var jsfxr = function(settings) {
   dv[3] = 0x20746D66; // "fmt "
   dv[4] = 0x00000010; // size of the following
   dv[5] = 0x00010001; // Mono: 1 channel, PCM format
-  dv[6] = 0x0000AC44; // 44,100 samples per second
-  dv[7] = 0x00015888; // byte rate: two bytes per sample
-  dv[8] = 0x00100002; // 16 bits per sample, aligned on every two bytes
+  dv[6] = 0x00002B11 * (5-synth.sampleRate); // 11,025 samples per second
+  dv[7] = 0x00005622 * (5-synth.sampleRate); // byte rate: two bytes per sample
+  dv[8] = synth.sampleRes>>3 | synth.sampleRes<<16; // 8 or 16 bits per sample, aligned on every two bytes
   dv[9] = 0x61746164; // "data"
   dv[10] = used;      // put number of samples here
 

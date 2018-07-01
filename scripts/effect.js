@@ -38,12 +38,15 @@ Effect.prototype.reset = function(){
 
 	this.p_arp_speed.value = 0.0;
 	this.p_arp_mod.value = 0.0;
+
+  this.p_rate.value = 1;
+  this.p_bits.value = 16;
 };
 
 Effect.prototype.toArray = function(){
     var _this = this;
     var arr = [];
-    props.forEach(function(prop, i){
+    props.slice(2).forEach(function(prop, i){
         var propVal = _this[prop.name].value;
         arr.push(propVal);
     });
@@ -58,12 +61,14 @@ Effect.prototype.loadString = function(string){
     var _this = this;
     var str = _this.parseString(string);
     if(str){
-        props.forEach(function(prop, i){
+        props.slice(2).forEach(function(prop, i){
             _this[prop.name] = {
                 meta: prop,
                 value: str[i]
             };
         });
+        _this[props[0].name] = { meta: props[0], value: 1 }
+        _this[props[1].name] = { meta: props[1], value: 16 }
     }
 };
 
@@ -88,7 +93,8 @@ Effect.prototype.parseString = function(str){
 
 Effect.prototype.play = function(){
     var playString = this.toArray();
-    this.audio.src = jsfxr(playString);
+
+    this.audio.src = jsfxr(playString, this['p_rate'].value, this['p_bits'].value);
     this.audio.play();
 };
 

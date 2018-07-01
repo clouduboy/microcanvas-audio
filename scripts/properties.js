@@ -1,5 +1,30 @@
 export default [
     {
+        "description": "Sampling rate",
+        "name": "p_rate",
+        "rates": [
+            {
+                "name": "44,100 Hz",
+                "value": 1
+            },
+            {
+                "name": "22,050 Hz",
+                "value": 2
+            },
+            {
+                "name": "11,025 Hz",
+                "value": 4
+            }
+        ]
+    },
+    {
+        "description": "Sample resolution",
+        "name": "p_bits",
+        "min": 8,
+        "max": 16,
+        "step": 8
+    },
+    {
         "description": "Type",
         "name": "p_type",
         "types": [
